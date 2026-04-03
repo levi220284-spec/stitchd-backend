@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>STITCHD API Tester</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #111; color: #fff; }
+        button { background: #4CAF50; color: white; padding: 10px 20px; border: none; cursor: pointer; margin: 5px; border-radius: 5px; }
+        pre { background: #222; padding: 15px; border-radius: 5px; overflow-x: auto; }
+        input { padding: 8px; margin: 5px; border-radius: 5px; border: none; width: 300px; }
+    </style>
+</head>
+<body>
+    <h1>STITCHD API Tester</h1>
+
+    <h2>1. Get All Products</h2>
+    <button onclick="getProducts()">Get Products</button>
+    <pre id="products-result"></pre>
+
+    <h2>2. Login</h2>
+    <input type="email" id="email" placeholder="Email" value="shuvo@gmail.com">
+    <input type="password" id="password" placeholder="Password" value="123456">
+    <button onclick="login()">Login</button>
+    <pre id="login-result"></pre>
+
+    <h2>3. Place Order (login first)</h2>
+    <button onclick="placeOrder()">Place Order</button>
+    <pre id="order-result"></pre>
+
+    <h2>4. My Orders (login first)</h2>
+    <button onclick="getMyOrders()">Get My Orders</button>
+    <pre id="myorders-result"></pre>
+
+    <script>
+        const API = 'https://stitchd-backend-production.up.railway.app';
+        let token = '';
+        let productId = '';
+
+        async function getProducts() {
+            const res = await fetch(`${API}/api/products`);
+            const data = await res.json();
+            productId = data.data[0]._id;
+            document.getElementById('products-result').textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function login() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const res = await fetch(`${API}/api/auth/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            token = data.token;
+            document.getElementById('login-result').textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function placeOrder() {
+            if (!token) { alert('Login first!'); return; }
+            if (!productId) { alert('Click Get Products first!'); return; }
+
+            const res = await fetch(`${API}/api/orders`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    items: [{ productId, quantity: 1 }],
+                    paymentMethod: 'bkash',
+                    shippingAddress: {
+                        address: '123 Mirpur Road',
+                        city: 'Dhaka',
+                        phone: '01712345678'
+                    }
+                })
+            });
+            const data = await res.json();
+            document.getElementById('order-result').textContent = JSON.stringify(data, null, 2);
+        }
+
+        async function getMyOrders() {
+            if (!token) { alert('Login first!'); return; }
+
+            const res = await fetch(`${API}/api/orders/myorders`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            const data = await res.json();
+            document.getElementById('myorders-result').textContent = JSON.stringify(data, null, 2);
+        }
+    </script>
+</body>
+</html>

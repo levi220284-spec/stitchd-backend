@@ -1,28 +1,32 @@
 const express = require('express');
 const dotenv = require('dotenv');
+const cors = require('cors');
+// cors = allows your frontend to talk to your backend from a different address
 dotenv.config();
 
 const connectDB = require('./config/db');
 const app = express();
 connectDB();
 
+app.use(cors());
+// this one line allows any frontend to call your API
+// like opening the door to everyone
+
 app.use(express.json());
 
-// Routes
 const productRoutes = require('./routes/products');
 const authRoutes = require('./routes/auth');
+const orderRoutes = require('./routes/orders');
 
 app.use('/api/products', productRoutes);
 app.use('/api/auth', authRoutes);
-// all auth routes live at /api/auth/...
-// so register = /api/auth/register
-// login = /api/auth/login
+app.use('/api/orders', orderRoutes);
 
 app.get('/', (req, res) => {
     res.json({ message: 'Welcome to STITCHD API' });
 });
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
     console.log(`Server running on port ${PORT}`);
 });
